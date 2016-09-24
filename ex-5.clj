@@ -43,3 +43,4 @@
 (def tokens (parser program))
 (map #(replace (get commands (keyword (:cmd %))) #"%" (:mod %)) tokens)
 
+#_(Evaluates to => ("Select Pen 2" "Pen Down" "Draw West 2cm" "Draw North 1cm" "Draw East 2cm" "Draw South 1cm" "Pen Up"))
