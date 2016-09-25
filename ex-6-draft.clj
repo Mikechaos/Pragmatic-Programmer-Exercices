@@ -74,3 +74,4 @@
 (def lookup (tokenize-grammar-alt simple-grammar))
 (def terminality (check-rule-terminality simple-tokens))
 
+(defn find-next-expand [grammar] (first (filter (fn [x] (not (get-in grammar [x :terminality]))) (keys grammar))))
