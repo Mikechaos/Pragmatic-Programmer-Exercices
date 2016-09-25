@@ -33,3 +33,16 @@
   "<separator>            ::= \":\""
   "<meridiem-indicator>   ::= \"am\" | \"pm\""]))
 
+(def parser-rule
+  #"(?x)
+  ^
+  (<.*?>)
+  \s*?
+  ::=
+  \s*?
+  (\S.*?)
+  $
+  ")
+
+(def elem #"<.*?>")
+
