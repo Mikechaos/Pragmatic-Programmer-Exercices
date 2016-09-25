@@ -66,6 +66,8 @@
       (if (or (nil? rule) (not (nil? (re-find elem-pattern rule)))) nil
         (recur r acc)))))
 
-(defn check-rule-terminality [grammar] (map is-terminal-rule (map #(:rules %) simple-tokens)))
+(defn get-elems [tokens] (map #(:elem %) tokens))
+(defn get-rules [tokens] (map #(:rules %) tokens))
+(defn check-rule-terminality [tokens] (map is-terminal-rule (get-rules tokens)))
 
 (check-rule-terminality grammar)
