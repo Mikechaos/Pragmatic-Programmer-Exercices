@@ -76,3 +76,4 @@
 
 (defn find-next-expand [grammar] (first (filter (fn [x] (not (get-in grammar [x :terminality]))) (keys grammar))))
 (defn expand-elem [grammar next-expand] (vec (flatten (map #(:rules (% grammar)) (map keyword (:rules (next-expand grammar)))))))
+(defn iterate-grammar [grammar expanded-elem next-expand] (reduce-kv (fn [m k v] (let [fv (if (= k next-expand) {:rules expanded-elem :terminality (is-terminal-rule expanded-elem)} v)] (assoc m k fv))) {} grammar))
