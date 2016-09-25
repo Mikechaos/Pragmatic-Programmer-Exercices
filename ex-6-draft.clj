@@ -70,4 +70,7 @@
 (defn get-rules [tokens] (map #(:rules %) tokens))
 (defn check-rule-terminality [tokens] (map is-terminal-rule (get-rules tokens)))
 
-(check-rule-terminality grammar)
+(defn tokenize-grammar-alt [grammar] (let [lookup-list (map (fn [[_ elem rules]] (let [rule-coll (str/split rules #"\s?\|\s?")] (list (keyword elem) {:rules rule-coll :terminality (is-terminal-rule rule-coll)}))) (match-program parser-rule grammar))] (zipmap (map first lookup-list) (map second lookup-list))))
+(def lookup (tokenize-grammar-alt simple-grammar))
+(def terminality (check-rule-terminality simple-tokens))
+
