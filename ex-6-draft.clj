@@ -79,3 +79,9 @@
 (defn iterate-grammar [grammar expanded-elem next-expand] (reduce-kv (fn [m k v] (let [fv (if (= k next-expand) {:rules expanded-elem :terminality (is-terminal-rule expanded-elem)} v)] (assoc m k fv))) {} grammar))
 (defn check-grammar [rules input] (not (empty? (filter #(= (read-string %) input) rules))))
 
+; Simple grammar steps
+(def next-expand (find-next-expand lookup))
+(def expanded-elem (expand-elem lookup next-expand))
+(def first-iteration-grammar (iterate-grammar lookup expanded-elem next-expand))
+(def compiled-simple-grammar (:rules ((first (first first-iteration-grammar)) first-iteration-grammar)))
+
