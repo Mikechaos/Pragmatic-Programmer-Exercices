@@ -50,3 +50,12 @@
 
 (defn tokenize-grammar [grammar] (map (fn [[_ elem rules]] { :elem elem :rules (str/split rules #"\s?\|\s?") }) (match-program parser-rule grammar)))
 
+(defn is-terminal-rule [rules]
+  (loop [[rule & r] rules acc true ]
+    (if (or (nil? acc) (nil? rule)) acc
+      (if (or (nil? rule) (not (nil? (re-find elem rule)))) nil
+        (recur r acc)))))
+
+(defn check-rule-terminality [grammar] (map is-terminal-rule (map #(:rules %) simple-tokens)))
+
+(check-rule-terminality grammar)
