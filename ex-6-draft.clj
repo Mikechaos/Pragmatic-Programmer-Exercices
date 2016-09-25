@@ -46,14 +46,24 @@
   $
   ")
 
-(def elem #"<.*?>")
+(def elem-pattern #"<.*?>")
 
 (defn tokenize-grammar [grammar] (map (fn [[_ elem rules]] { :elem elem :rules (str/split rules #"\s?\|\s?") }) (match-program parser-rule grammar)))
+
+; (match-program parser-rule grammar)
+(tokenize-grammar grammar)
+
+(def simple-grammar (trim-program [
+  "<bool>  ::= <true> | <false>"
+  "<true>  ::= true | 1"
+  "<false> ::= false | 0"]))
+
+(def simple-tokens (tokenize-grammar simple-grammar))
 
 (defn is-terminal-rule [rules]
   (loop [[rule & r] rules acc true ]
     (if (or (nil? acc) (nil? rule)) acc
-      (if (or (nil? rule) (not (nil? (re-find elem rule)))) nil
+      (if (or (nil? rule) (not (nil? (re-find elem-pattern rule)))) nil
         (recur r acc)))))
 
 (defn check-rule-terminality [grammar] (map is-terminal-rule (map #(:rules %) simple-tokens)))
