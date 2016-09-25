@@ -84,4 +84,7 @@
 (def expanded-elem (expand-elem lookup next-expand))
 (def first-iteration-grammar (iterate-grammar lookup expanded-elem next-expand))
 (def compiled-simple-grammar (:rules ((first (first first-iteration-grammar)) first-iteration-grammar)))
+(check-grammar compiled-simple-grammar true) ; => valid input
+(check-grammar compiled-simple-grammar 0)    ; => valid input
+(check-grammar compiled-simple-grammar "2")  ; => invalid input
 
