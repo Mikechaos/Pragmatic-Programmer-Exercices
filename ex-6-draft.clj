@@ -1,3 +1,5 @@
+(require '[clojure.string :as str])
+
 (def possible-formats ["4pm" "7:38pm" "23:42" "3:16" "3:16am"])
 
 ; Grammar
@@ -45,4 +47,6 @@
   ")
 
 (def elem #"<.*?>")
+
+(defn tokenize-grammar [grammar] (map (fn [[_ elem rules]] { :elem elem :rules (str/split rules #"\s?\|\s?") }) (match-program parser-rule grammar)))
 
