@@ -72,3 +72,7 @@
 (def tokens (parser program))
 (map #(apply-command %) tokens)
 #_(Evaluates to => ("Select Pen 2" "Pen Down" "Draw West 2cm" "Draw North 1cm" "Draw East 2cm" "Draw South 1cm" "Pen Up"))
+
+
+; One liner
+(map (fn [[_ cmd mod & rst]] (replace (get commands (keyword cmd)) #"%" (test-nil mod mod ""))) (map #(re-find #"^([A-Z])\s([0-9])?\s?(#.*)?$" %) program))
