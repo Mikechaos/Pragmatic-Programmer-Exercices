@@ -15,3 +15,8 @@
 ; <meridiem-indicator>   ::= "am" | "pm"
 ;
 
+
+(defn trim-program
+  "Returns a program with no 2 consecutive spaces"
+  [program] (map #(replace % #"\s+" " ") program))
+
