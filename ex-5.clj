@@ -1,3 +1,4 @@
+(require '[clojure.string :as str])
 ; Implement a simple DSL to draw a rectangle
 ; Takes a program as input
 ; Parses it
@@ -37,7 +38,7 @@
 (defn execute-command
   "Takes a command and a modifier and outputs the corresponding string"
   ([cmd] (get commands (keyword cmd)))
-  ([cmd mod] (replace (get commands (keyword cmd)) #"%" mod)))
+  ([cmd mod] (str/replace (get commands (keyword cmd)) #"%" mod)))
 
 (defn apply-command
   "Extract the command and modifier from each match and apply the command"
