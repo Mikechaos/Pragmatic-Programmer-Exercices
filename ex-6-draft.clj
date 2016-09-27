@@ -31,20 +31,27 @@
 
 (defn trim-program
   "Returns a program with no 2 consecutive spaces"
-  [program] (map #(replace % #"\s+" " ") program))
+  [program] (vec (map #(str/replace % #"\s+" " ") program)))
 
-(def grammar (trim-program [
-  "<time>                 ::= <12-hour><meridiem-indicator> | <12-hour><separator><minute><meridiem-indicator> | <24-hour><separator><minute> | <12-hour><separator><minute>"
-  "<12-hour>              ::= <digit> | \"10\" | \"11\" | \"12\""
-  "<24-hour>              ::= <first-digit-hour><digit> | \"2\"<second-digit-hour>"
-  "<minute>               ::= <first-digit-minute><second-digit-minute>"
-  "<digit>                ::= \"0\" | \"1\" | \"2\" | \"3\" | \"4\" | \"5\" | \"6\" | \"7\" | \"8\" | \"9\""
-  "<first-digit-hour>     ::= \"0\" | \"1\""
-  "<second-digit-hour>    ::= \"0\" | \"1\" | \"2\" | \"3\" | \"4\""
-  "<first-digit-minute>   ::= \"0\" | \"1\" | \"2\" | \"3\" | \"4\" | \"5\""
-  "<second-digit-minute>  ::= <digit>"
-  "<separator>            ::= \":\""
-  "<meridiem-indicator>   ::= \"am\" | \"pm\""]))
+(defmacro def-grammar [grammar-name primary grammar]
+  `(def ~grammar-name (with-meta (trim-program ~grammar) {:primary ~primary})))
+
+(def-grammar grammar :<time> [
+  "<time>                 ::= <12-hour><meridiem-indicator> | <12-hour><separator><minute><meridiem-indicator> | <24-hour><separator><minute>"
+  "<12-hour>              ::= <digit> | <two-digit-hour>"
+  "<24-hour>              ::= <first-digit-hour><digit> | <2><second-digit-hour> | <12-hour>"
+  "<minute>               ::= <first-digit-minute><digit>"
+  "<digit>                ::= 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9"
+  "<two-digit-hour>       ::= 10 | 11 | 12"
+  "<first-digit-hour>     ::= 0 | 1"
+  "<second-digit-hour>    ::= 0 | 1 | 2 | 3"
+  "<first-digit-minute>   ::= 0 | 1 | 2 | 3 | 4 | 5"
+  ; "<second-digit-minute>  ::= <digit>"
+  "<separator>            ::= : | <h>"
+  "<2>                    ::= 2"
+  "<h>                    ::= h"
+  "<meridiem-indicator>   ::= am | pm"])
+
 
 (def parser-rule
   #"(?x)
