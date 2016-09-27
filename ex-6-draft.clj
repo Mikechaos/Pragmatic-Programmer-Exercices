@@ -190,6 +190,9 @@
     {} grammar))
 (defn is-grammar-terminal [grammar iteration] (true? (:terminality ((get-primary-term grammar) iteration))))
 
+(defn iterate-grammar [iteration] (let [next-expand (find-next-expand iteration) expanded-term (expand-term iteration next-expand)] (prn-debug "next-expand") (prn-debug next-expand) (prn-debug "expanded-term") (prn-debug expanded-term)
+  (replace-term iteration expanded-term next-expand)))
+
 
 ; Simple grammar steps
 (def next-expand (find-next-expand lookup))
