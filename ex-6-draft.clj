@@ -116,6 +116,8 @@
           more (cart (rest colls))]
       (cons x more))))
 
+(defn compile-rule [terminal-rule] (flatten (map (fn [rule] (if (= 1 (count (map count rule))) (flatten rule) (map #(str/join " " %) (map (fn [x] (flatten x)) (cart rule))))) terminal-rule)))
+
 (defn tokenize-grammar-alt [grammar]
   (let [
     lookup-list (map
