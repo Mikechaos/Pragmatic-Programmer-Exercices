@@ -8,7 +8,7 @@
   ([s & r] (prn s) (map prn r)))
 
 (defmacro prn-debug [& args]
-  `(if ~debug-mode? (apply helper-prn-debug '~args ) ~nil))
+  `(if ~debug-mode? (helper-prn-debug ~@args) ~nil))
 
 (def possible-formats ["4pm" "7:38pm" "23:42" "3:16" "03:16" "3:16am" "15h15", "1h24pm"])
 (def error-formats ["4ampm" "17:38pm" "23h:42" "3:011" "03:16pm" "15h61", "24h24"])
