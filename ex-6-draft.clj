@@ -72,10 +72,10 @@
 ; (match-program parser-rule grammar)
 (tokenize-grammar grammar)
 
-(def simple-grammar (trim-program [
-  "<bool>  ::= <true> | <false>"
+(def-grammar simple-grammar :<bool> [
+  "<bool>  ::= <true> | <false>" 
   "<true>  ::= true | 1"
-  "<false> ::= false | 0"]))
+  "<false> ::= false | 0"])
 
 (def simple-tokens (tokenize-grammar simple-grammar))
 
