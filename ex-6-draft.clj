@@ -117,6 +117,14 @@
       (cons x more))))
 
 (defn compile-rule [terminal-rule] (flatten (map (fn [rule] (if (= 1 (count (map count rule))) (flatten rule) (map #(str/join " " %) (map (fn [x] (flatten x)) (cart rule))))) terminal-rule)))
+(defn compile-rule2 [terminal-rule] (prn-debug "terminal-rule - compile rule") (prn-debug terminal-rule)
+  (let [
+    test-rule (flatten [terminal-rule])
+    count-rule (count test-rule)]
+    (if (or (= test-rule terminal-rule) (= 1 count-rule))
+      terminal-rule
+      (map #(str/join %) (map flatten (cart terminal-rule))))))
+
 
 (defn tokenize-grammar-alt [grammar]
   (let [
