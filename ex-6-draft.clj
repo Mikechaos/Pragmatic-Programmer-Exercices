@@ -200,6 +200,8 @@
       (let [new-i (iterate-grammar i) terminal? (is-grammar-terminal grammar new-i)]
       (recur new-i terminal?)))))
 
+(defn check-grammar [rules input] (not (empty? (filter #(= % input) rules))))
+
 ; Simple grammar steps
 (def next-expand (find-next-expand lookup))
 (def expanded-elem (expand-elem lookup next-expand))
