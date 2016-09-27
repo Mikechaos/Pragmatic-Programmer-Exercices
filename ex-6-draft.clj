@@ -125,6 +125,15 @@
       terminal-rule
       (map #(str/join %) (map flatten (cart terminal-rule))))))
 
+(defn compile-rule3 [terminal-rule cnt] (prn-debug "== TERMINAL-RULE== ")(prn-debug terminal-rule) (prn-debug cnt)
+  (let [
+    test-rule (flatten [terminal-rule])
+    count-rule (count test-rule)]
+    (if (or (= test-rule terminal-rule) (= 1 count-rule))
+      terminal-rule
+      (if (= 1 cnt)
+        (flatten (compile-rule2 terminal-rule))
+        (flatten (map compile-rule2 terminal-rule))))))
 
 (defn tokenize-grammar-alt [grammar]
   (let [
