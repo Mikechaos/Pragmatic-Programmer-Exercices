@@ -204,10 +204,16 @@
 
 ; Simple grammar steps
 (def next-expand (find-next-expand lookup))
-(def expanded-elem (expand-elem lookup next-expand))
-(def first-iteration-grammar (iterate-grammar lookup expanded-elem next-expand))
+(def expanded-term (expand-term lookup next-expand))
+(def first-iteration-grammar (replace-term lookup expanded-term next-expand))
+
 (def compiled-simple-grammar (:rules ((first (first first-iteration-grammar)) first-iteration-grammar)))
-(check-grammar compiled-simple-grammar true) ; => valid input
-(check-grammar compiled-simple-grammar 0)    ; => valid input
-(check-grammar compiled-simple-grammar "2")  ; => invalid input
+
+; Complex grammar steps
+(def tokenized-grammar (tokenize-grammar-alt grammar))
+(def next-expand2 (find-next-expand tokenized-grammar))
+(def expanded-elem2 (expand-term tokenized-grammar next-expand2))
+(def first-iteration-comp-grammar (replace-term tokenized-grammar expanded-elem2 next-expand2))
+(def compiled-grammar (compile-grammar grammar tokenized-grammar))
+
 
