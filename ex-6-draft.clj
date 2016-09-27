@@ -127,9 +127,26 @@
 (def terminality (check-rule-terminality simple-tokens))
 
 (defn find-next-expand [grammar] (first (filter (fn [x] (not (get-in grammar [x :terminality]))) (keys grammar))))
-(defn expand-elem [grammar next-expand] (vec (flatten (map #(:rules (% grammar)) (map keyword (:rules (next-expand grammar)))))))
-(defn iterate-grammar [grammar expanded-elem next-expand] (reduce-kv (fn [m k v] (let [fv (if (= k next-expand) {:rules expanded-elem :terminality (is-terminal-rule expanded-elem)} v)] (assoc m k fv))) {} grammar))
-(defn check-grammar [rules input] (not (empty? (filter #(= (read-string %) input) rules))))
+; (defn expand-term [grammar next-expand] (vec (flatten (map #(:rules (% grammar)) (:rules (next-expand grammar))))))
+(defn expand-term [grammar next-expand] (prn-debug (next-expand grammar))
+  (let [
+    term (next-expand grammar)
+    rules (:rules term)
+    cnt (:count term)
+    side-effect (prn-debug str "SIDE EFFECT" rules)
+    side-effect-3 (prn-debug str "SIDE EFFECT3" cnt)
+    expanded-terms (map
+      (defn real-expand-term [rule] (prn-debug "rule") (prn-debug rule)
+        (if (keyword? rule)
+          (:rules (rule grammar))
+          (if (are-terminal-rules [rule]) rule
+            (map #(real-expand-term %) rule))))
+          ; (prn-debug rule))))
+    rules)
+    side-effet-2 (prn-debug (flatten [expanded-terms]))
+    is-flat? (empty? (filter #(and (not (keyword? %)) (not (are-terminal-rules [%]))) rules))] (prn-debug "is-flat") (prn-debug rules) (prn-debug is-flat?) (prn-debug is-flat?)
+    (if (and is-flat? (not (= 1 cnt))) (flatten [expanded-terms]) expanded-terms)))
+
 
 ; Simple grammar steps
 (def next-expand (find-next-expand lookup))
