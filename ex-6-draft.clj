@@ -1,6 +1,16 @@
 (require '[clojure.string :as str])
 
-(def possible-formats ["4pm" "7:38pm" "23:42" "3:16" "3:16am"])
+(def debug-mode? false)
+
+(defn toggle-debug [] (second (list (def debug-mode? (not debug-mode?)) debug-mode?)))
+(defn- helper-prn-debug 
+  ([s] (prn s))
+  ([s & r] (prn s) (map prn r)))
+
+(defmacro prn-debug [& args]
+  `(if ~debug-mode? (apply helper-prn-debug '~args ) ~nil))
+
+(def possible-formats ["4pm" "7:38pm" "23:42" "3:16" "03:16" "3:16am" "15h15", "1h24pm"])
 
 ; Grammar
 ;
