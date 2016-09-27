@@ -65,7 +65,7 @@
   $
   ")
 
-(def term-pattern #"<.*?>")
+(def term-re #"<.*?>")
 
 (defn tokenize-grammar [grammar] (map (fn [[_ term rules]] { :term term :rules (str/split rules #"\s?\|\s?") }) (match-program parser-rule grammar)))
 
@@ -84,16 +84,18 @@
 (defn get-elems [tokens] (map #(:term %) tokens))
 (defn get-rules [tokens] (map #(:rules %) tokens))
 
-; (def rule-pattern #"^((((((<[0-9A-Za-z\-]+>)|([0-9A-Za-z\"]+)|\s+)+)+?)\s*\|?)+)$")
-(def token-pattern #"(?U)<[0-9A-Za-z\-]+?>|[\S\"]+|\s+")
-(def match-next-token (partial re-find token-pattern))
+(def term-re #"<[0-9A-Za-z\-]+?>")
+(def terminal-token-re #"[\S\"]+")
+(def space-re #"\s+")
+(def token-re (re-pattern (str/join "|" [term-re terminal-token-re space-re])))
+(def match-next-token (partial re-find token-re))
 (defn split-rules [rules] (str/split rules #"\s?\|\s?"))
 (defn tokenize-rule [rule]
   (let [t (map
     #(if (re-find #"<[0-9A-Za-z\-]+?>" %) (keyword %) %)
     (filter
       #(not (re-find #"\s+" %))
-      (re-seq token-pattern rule)))] ;(prn-debug t) (prn-debug (count t)) (prn-debug (first t))
+      (re-seq token-re rule)))] ;(prn-debug t) (prn-debug (count t)) (prn-debug (first t))
   ; (if (= 1 (count t)) (first t) t)))
   t))
 
