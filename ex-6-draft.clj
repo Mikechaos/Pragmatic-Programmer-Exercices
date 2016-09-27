@@ -98,6 +98,17 @@
       (re-seq token-re rule)))] ;(prn-debug t) (prn-debug (count t)) (prn-debug (first t))
   ; (if (= 1 (count t)) (first t) t)))
   t))
+(defn tokenize-rules [rules] ;(prn-debug rules)
+  (let [
+    split (split-rules rules)
+    cnt (count split)
+    tokens (map tokenize-rule split)
+    single-tokens (empty? (filter #(and (not (keyword? %)) (not (are-terminal-rules %))) split))
+    flatten-token (if (= 1 (count tokens)) (first tokens) tokens)] (prn-debug "single-tokens") (prn-debug single-tokens) (prn-debug "flatten-token") (prn-debug flatten-token)
+    {:tokens flatten-token :count cnt :single-tokens single-tokens}))
+
+
+
 
 (def lookup (tokenize-grammar-alt simple-grammar))
 (def terminality (check-rule-terminality simple-tokens))
