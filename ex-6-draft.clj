@@ -109,6 +109,19 @@
 
 
 
+(defn tokenize-grammar-alt [grammar]
+  (let [
+    lookup-list (map
+      (fn [[_ term rules]] (let [
+        rule-obj       (tokenize-rules rules)
+        rule-coll      (:tokens rule-obj)
+        cnt            (:count rule-obj)
+        terminal-rule  (are-terminal-rules rule-coll)
+        flatten-rule   (if (:single-tokens (meta rule-coll)) (flatten rule-coll) rule-coll)
+        final-rule     flatten-rule] (prn-debug "rule-coll") (prn-debug rule-coll) (prn-debug "terminal-rule") (prn-debug terminal-rule) (prn-debug "final-rule") (prn-debug final-rule)
+        (list (keyword term) {:rules final-rule :terminality terminal-rule :compiled terminal-rule :count cnt })))
+      (match-program parser-rule grammar))] ;(prn-debug lookup-list)
+    (zipmap (map first lookup-list) (map second lookup-list))))
 
 (def lookup (tokenize-grammar-alt simple-grammar))
 (def terminality (check-rule-terminality simple-tokens))
