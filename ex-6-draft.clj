@@ -193,6 +193,12 @@
 (defn iterate-grammar [iteration] (let [next-expand (find-next-expand iteration) expanded-term (expand-term iteration next-expand)] (prn-debug "next-expand") (prn-debug next-expand) (prn-debug "expanded-term") (prn-debug expanded-term)
   (replace-term iteration expanded-term next-expand)))
 
+(defn compile-grammar [grammar iteration ]
+  (loop [i iteration terminal? (is-grammar-terminal grammar i)]
+    (if terminal?
+      (:rules ((get-primary-term grammar) i))
+      (let [new-i (iterate-grammar i) terminal? (is-grammar-terminal grammar new-i)]
+      (recur new-i terminal?)))))
 
 ; Simple grammar steps
 (def next-expand (find-next-expand lookup))
