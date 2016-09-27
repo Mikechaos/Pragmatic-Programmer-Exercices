@@ -173,6 +173,21 @@
     is-flat? (empty? (filter #(and (not (keyword? %)) (not (are-terminal-rules [%]))) rules))] (prn-debug "is-flat") (prn-debug rules) (prn-debug is-flat?) (prn-debug is-flat?)
     (if (and is-flat? (not (= 1 cnt))) (flatten [expanded-terms]) expanded-terms)))
 
+(defn replace-term [grammar expanded-term next-expand]
+  (reduce-kv
+    (fn [m k v]
+      (let [
+        compiled? (:compiled v)
+        terminal? (are-terminal-rules expanded-term)
+        needCompile? (and (not compiled?) terminal?)
+        cnt (:count v)
+        final-term (if needCompile? (compile-rule3 expanded-term cnt) expanded-term)
+        compiled (or compiled? needCompile?)
+        fv (if (= k next-expand)
+          {:rules final-term :terminality terminal? :compiled compiled :count cnt }
+          v)] ; (prn-debug compiled)
+        (assoc m k fv)))
+    {} grammar))
 
 ; Simple grammar steps
 (def next-expand (find-next-expand lookup))
