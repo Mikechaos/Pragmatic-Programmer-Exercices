@@ -52,6 +52,7 @@
   "<h>                    ::= h"
   "<meridiem-indicator>   ::= am | pm"])
 
+(defn get-primary-term [grammar] (:primary (meta grammar)))
 
 (def parser-rule
   #"(?x)
