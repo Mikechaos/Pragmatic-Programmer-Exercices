@@ -216,4 +216,6 @@
 (def first-iteration-comp-grammar (replace-term tokenized-grammar expanded-elem2 next-expand2))
 (def compiled-grammar (compile-grammar grammar tokenized-grammar))
 
+[(map (fn [frmt] [frmt (check-grammar compiled-grammar frmt)]) possible-formats)
+(map (fn [frmt] [frmt (check-grammar compiled-grammar frmt)]) error-formats)]
 
