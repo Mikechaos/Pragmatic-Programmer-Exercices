@@ -85,7 +85,8 @@
       (if (or (nil? rule) (not (nil? (re-find term-pattern rule)))) nil
         (recur r acc)))))
 
-(defn get-elems [tokens] (map #(:elem %) tokens))
+(defn are-terminal-rules [rules] (empty? (filter #(keyword? %) (flatten [rules]))))
+(defn get-elems [tokens] (map #(:term %) tokens))
 (defn get-rules [tokens] (map #(:rules %) tokens))
 (defn check-rule-terminality [tokens] (map is-terminal-rule (get-rules tokens)))
 
