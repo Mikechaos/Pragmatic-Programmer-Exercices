@@ -65,9 +65,9 @@
   $
   ")
 
-(def elem-pattern #"<.*?>")
+(def term-pattern #"<.*?>")
 
-(defn tokenize-grammar [grammar] (map (fn [[_ elem rules]] { :elem elem :rules (str/split rules #"\s?\|\s?") }) (match-program parser-rule grammar)))
+(defn tokenize-grammar [grammar] (map (fn [[_ term rules]] { :term term :rules (str/split rules #"\s?\|\s?") }) (match-program parser-rule grammar)))
 
 ; (match-program parser-rule grammar)
 (tokenize-grammar grammar)
@@ -82,7 +82,7 @@
 (defn is-terminal-rule [rules]
   (loop [[rule & r] rules acc true ]
     (if (or (nil? acc) (nil? rule)) acc
-      (if (or (nil? rule) (not (nil? (re-find elem-pattern rule)))) nil
+      (if (or (nil? rule) (not (nil? (re-find term-pattern rule)))) nil
         (recur r acc)))))
 
 (defn get-elems [tokens] (map #(:elem %) tokens))
