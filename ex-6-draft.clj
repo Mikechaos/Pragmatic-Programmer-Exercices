@@ -188,6 +188,8 @@
           v)] ; (prn-debug compiled)
         (assoc m k fv)))
     {} grammar))
+(defn is-grammar-terminal [grammar iteration] (true? (:terminality ((get-primary-term grammar) iteration))))
+
 
 ; Simple grammar steps
 (def next-expand (find-next-expand lookup))
