@@ -89,23 +89,53 @@
 (def space-re #"\s+")
 (def token-re (re-pattern (str/join "|" [term-re terminal-token-re space-re])))
 (def match-next-token (partial re-find token-re))
-(defn split-rules [rules] (str/split rules #"\s?\|\s?"))
-(defn tokenize-rule [rule]
-  (let [t (map
-    #(if (re-find #"<[0-9A-Za-z\-]+?>" %) (keyword %) %)
+(defn split-rules
+  "Split the rule on each |
+  Returns a collection of rule"
+  [rules] (str/split rules #"\s?\|\s?"))
+
+(defn tokenize-rule
+  "Extract all tokens from rule, ignore space and
+  transform each '<term>' into :<term> (str to keyword)"
+  [rule]
+  (let [tokenized-rule (map
+    #(if (re-find term-re %) (keyword %) %)
     (filter
       #(not (re-find #"\s+" %))
-      (re-seq token-re rule)))] ;(prn-debug t) (prn-debug (count t)) (prn-debug (first t))
-  ; (if (= 1 (count t)) (first t) t)))
-  t))
-(defn tokenize-rules [rules] ;(prn-debug rules)
+      (re-seq token-re rule)))] (prn-debug [tokenized-rule (count tokenized-rule)])
+  tokenized-rule))
+
+
+(defn is-single-token?
+  "Verify if the current token is a combination of many definition or a simple rule
+  If it's a list with only one element, it is also extracted"
+  [token] (or (keyword? token) (are-terminal-rules token) (empty? (rest token))))
+
+(defn has-only-single-tokens?
+  "When we have only single tokens, we can simplify our groupings.
+  The groupings are critical when we apply the cartesian product while compiling the rules
+  We look if we find only keywords (terms) and terminal rules (terminated expr)
+  Returns false if it finds a list of tokens for example"
+  [rules] (every? is-single-token? rules))
+
+(defn remove-unecessary-groupings
+  "When a rule is a single token, we omit the surrounding grouping
+  (:<token>) => :<token>"
+  [tokens] (if (= 1 (count tokens)) (first tokens) tokens))
+
+(defn tokenize-rules
+  "Splits the rules, iterates over each to tokenize it, gather meta-data
+  and format the tokenized rule with proper groupings.
+  \"<digit> | <letter> | + | *\" =>
+  {:tokens ((:<digit>) (:<letter>) (\"+\") (\"*\")), :count 4} with meta {:single-tokens? true}"
+  [rules] (prn-debug rules)
   (let [
     split (split-rules rules)
     cnt (count split)
     tokens (map tokenize-rule split)
-    single-tokens (empty? (filter #(and (not (keyword? %)) (not (are-terminal-rules %))) split))
-    flatten-token (if (= 1 (count tokens)) (first tokens) tokens)] (prn-debug "single-tokens") (prn-debug single-tokens) (prn-debug "flatten-token") (prn-debug flatten-token)
-    {:tokens flatten-token :count cnt :single-tokens single-tokens}))
+    single-tokens? (has-only-single-tokens? tokens)
+    final-tokens (remove-unecessary-groupings tokens)] (prn-debug ["tokens" tokens "single-tokens" single-tokens? "final-tokens" final-tokens])
+    (with-meta {:tokens final-tokens :count cnt} {:single-tokens? single-tokens?} )))
 
 
 
