@@ -10,6 +10,14 @@
 (defmacro prn-debug [& args]
   `(if ~debug-mode? (helper-prn-debug ~@args) ~nil))
 
+(defmacro prn-dbg
+  "Duplicate all elements in a coll.
+  Prints the first one as a symbol and prints the value of the second one
+  Example:
+  (def a-symbol :a-value) (def another-symbol 123)
+  (print-dbg [a-symbol another-symbol]) => [a-symbol :a-value another-symbole 123]"
+  [coll] (let [x# (reduce (fn [coll# e#] `(conj ~coll# '~e# ~e#)) [] coll)] `(prn-debug ~x#)))
+
 (def possible-formats ["4pm" "7:38pm" "23:42" "3:16" "03:16" "3:16am" "15h15", "1h24pm"])
 (def error-formats ["4ampm" "17:38pm" "23h:42" "3:011" "03:16pm" "15h61", "24h24"])
 
