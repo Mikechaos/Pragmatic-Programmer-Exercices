@@ -148,30 +148,44 @@
 
 
 (defn cart [colls]
+  "Calculates the cartesian product of colls"
   (if (empty? colls)
     '(())
     (for [x (first colls)
           more (cart (rest colls))]
       (cons x more))))
 
-(defn compile-rule [terminal-rule] (flatten (map (fn [rule] (if (= 1 (count (map count rule))) (flatten rule) (map #(str/join " " %) (map (fn [x] (flatten x)) (cart rule))))) terminal-rule)))
-(defn compile-rule2 [terminal-rule] (prn-debug "terminal-rule - compile rule") (prn-debug terminal-rule)
-  (let [
-    test-rule (flatten [terminal-rule])
-    count-rule (count test-rule)]
-    (if (or (= test-rule terminal-rule) (= 1 count-rule))
-      terminal-rule
-      (map #(str/join %) (map flatten (cart terminal-rule))))))
 
-(defn compile-rule3 [terminal-rule cnt] (prn-debug "== TERMINAL-RULE== ")(prn-debug terminal-rule) (prn-debug cnt)
-  (let [
-    test-rule (flatten [terminal-rule])
-    count-rule (count test-rule)]
-    (if (or (= test-rule terminal-rule) (= 1 count-rule))
-      terminal-rule
-      (if (= 1 cnt)
-        (flatten (compile-rule2 terminal-rule))
-        (flatten (map compile-rule2 terminal-rule))))))
+(defn compile-rule [terminal-rule] (prn-dbg ['compile-rule terminal-rule])
+  "Calculate the cartesian product of the rule and join the left groupings in strings
+  Example :
+  (compile-rule '((1 2) (am pm))) ==> (\"1am\" \"1pm\" \"2am\" \"2pm\")"
+  (map #(str/join %) (map flatten (cart terminal-rule))))
+
+(defn is-simple-terminal-rule? [terminal-rule]
+  "If the rule if made from one simple grouping or on element
+  it is already fully compiled.
+  Examples :
+  (is-simple-terminal-rule? '(1 2 3 4)) => true
+  (is-simple-terminal-rule? '((1 2) (3 4)) => false"
+  (let [test-rule (flatten [terminal-rule])
+        count-rule (count test-rule)]
+    (or (= test-rule terminal-rule) (= 1 count-rule))))
+
+(def apply-appropriate-compilation #(if (is-simple-terminal-rule? %) % (compile-rule %)))
+(defn compile-rule-expr [terminal-rule cnt] (prn-dbg [terminal-rule cnt])
+  "Compiles a complete rule expr for a given term.
+  It can be made of many different alternative rules
+  The cnt represent the number of alternative rules.
+  It is important to get the groupings interpretation right.
+  TODO - This does not manage recursive constructs
+  (recursive term or deeply nested rules)"
+  (if (is-simple-terminal-rule? terminal-rule)
+    terminal-rule
+    (if (= 1 cnt)
+      (flatten (compile-rule terminal-rule))
+      (flatten (map apply-appropriate-compilation terminal-rule)))))
+
 
 (defn tokenize-grammar-alt [grammar]
   (let [
