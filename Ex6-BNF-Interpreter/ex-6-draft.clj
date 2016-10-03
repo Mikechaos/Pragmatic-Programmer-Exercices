@@ -3,7 +3,7 @@
 (def debug-mode? false)
 
 (defn toggle-debug [] (second (list (def debug-mode? (not debug-mode?)) debug-mode?)))
-(defn- helper-prn-debug 
+(defn- helper-prn-debug
   ([s] (prn s))
   ([s & r] (prn s) (map prn r)))
 
@@ -18,24 +18,9 @@
   (print-dbg [a-symbol another-symbol]) => [a-symbol :a-value another-symbole 123]"
   [coll] (let [x# (reduce (fn [coll# e#] `(conj ~coll# '~e# ~e#)) [] coll)] `(prn-debug ~x#)))
 
+
 (def possible-formats ["4pm" "7:38pm" "23:42" "3:16" "03:16" "3:16am" "15h15", "1h24pm"])
 (def error-formats ["4ampm" "17:38pm" "23h:42" "3:011" "03:16pm" "15h61", "24h24"])
-
-; Grammar
-;
-; <time>                 ::= <12-hour><meridiem-indicator> | <12-hour><separator><minute><meridiem-indicator> | <24-hour><separator><minute> | <12-hour><separator><minute>
-; <12-hour>              ::= <digit> | "10" | "11" | "12"
-; <24-hour>              ::= <first-digit-hour><digit> | "2"<second-digit-hour>
-; <minute>               ::= <first-digit-minute><second-digit-minute> | ""
-; <digit>                ::= "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"
-; <first-digit-hour>     ::= "0" | "1"
-; <second-digit-hour>    ::= "0" | "1" | "2" | "3" | "4"
-; <first-digit-minute>   ::= "0" | "1" | "2" | "3" | "4" | "5"
-; <second-digit-minute>  ::= <digit>
-; <separator>            ::= ":" | ""
-; <meridiem-indicator>   ::= "am" | "pm"
-;
-
 
 (defn trim-program
   "Returns a program with no 2 consecutive spaces"
@@ -81,7 +66,7 @@
 (tokenize-grammar grammar)
 
 (def-grammar simple-grammar :<bool> [
-  "<bool>  ::= <true> | <false>" 
+  "<bool>  ::= <true> | <false>"
   "<true>  ::= true | 1"
   "<false> ::= false | 0"])
 
@@ -205,11 +190,15 @@
       (match-program parser-rule grammar))] (prn lookup-list)
     (zipmap (map first lookup-list) (map second lookup-list))))
 
-(def lookup (tokenize-grammar-alt simple-grammar))
+(defn find-next-expand
+  "Find the next rule to be expanded.
+  Iterate over the grammar and finds the first terminal rule.
+  TODO - Improve the way we discriminate which rule is chosen."
+  [grammar] (first (filter (fn [x] (not (get-in grammar [x :terminality]))) (keys grammar))))
 
-(defn find-next-expand [grammar] (first (filter (fn [x] (not (get-in grammar [x :terminality]))) (keys grammar))))
-
-(defn expand-term [grammar next-expand] (prn-debug (next-expand grammar))
+(defn expand-term
+  "Iterate over a given rule expression and replace other rules occurence with their definition."
+  [grammar next-expand] (prn-debug (next-expand grammar))
   (let [
     term (next-expand grammar)
     rules (:rules term)
@@ -222,8 +211,8 @@
             (map #(real-expand-term %) rule))))
       rules)))
 
-(defn replace-term [grammar expanded-term next-expand] 
-  (reduce-kv 
+(defn replace-term [grammar expanded-term next-expand]
+  (reduce-kv
     (fn [m k v]
       (let [
         compiled? (:compiled v)
@@ -239,19 +228,27 @@
     {} grammar))
 (defn is-grammar-terminal [grammar iteration] (true? (:terminality ((get-primary-term grammar) iteration))))
 
-(defn iterate-grammar [iteration] (let [next-expand (find-next-expand iteration) expanded-term (expand-term iteration next-expand)] (prn-debug "next-expand") (prn-debug next-expand) (prn-debug "expanded-term") (prn-debug expanded-term)
+(defn iterate-grammar
+  "Iterate a tokenized grammar to produce a new iteration with a new expanded rule."
+  [iteration] (let [
+    next-expand (find-next-expand iteration)
+    expanded-term (expand-term iteration next-expand)] (prn-dbg [next-expand expanded-term])
   (replace-term iteration expanded-term next-expand)))
 
 (defn compile-grammar [grammar iteration ]
+  "Iterate a grammar until it is fully terminated."
   (loop [i iteration terminal? (is-grammar-terminal grammar i)]
     (if terminal?
       (:rules ((get-primary-term grammar) i))
       (let [new-i (iterate-grammar i) terminal? (is-grammar-terminal grammar new-i)]
       (recur new-i terminal?)))))
 
-(defn check-grammar [rules input] (not (empty? (filter #(= % input) rules))))
+(defn check-grammar
+  "Simple util to check if an input match the grammar."
+  [rules input] (not (empty? (filter #(= % input) rules))))
 
 ; Simple grammar steps
+(def lookup (tokenize-grammar-alt simple-grammar))
 (def next-expand (find-next-expand lookup))
 (def expanded-term (expand-term lookup next-expand))
 (def first-iteration-grammar (replace-term lookup expanded-term next-expand))
