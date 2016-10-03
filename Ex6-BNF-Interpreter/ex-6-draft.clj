@@ -49,13 +49,13 @@
 
 (def parser-rule
   #"(?x)
-  ^
-  (<.*?>)
-  \s*?
-  ::=
-  \s*?
-  (\S.*?)
-  $
+  ^       # Beginning of term definition
+  (<.*?>) # Match a term
+  \s*?    # Optional space
+  ::=     # Assignment operator
+  \s*?    # Optional space
+  (\S.*?) # Match the rule expression
+  $       # End of term definition
   ")
 
 (def term-re #"<.*?>")
@@ -106,7 +106,7 @@
   (map #(str/join %) (map flatten (cart terminal-rule))))
 
 (defn is-simple-terminal-rule? [terminal-rule]
-  "If the rule if made from one simple grouping or on element
+  "If the rule is made from one simple grouping or one element
   it is already fully compiled.
   Examples :
   (is-simple-terminal-rule? '(1 2 3 4)) => true
