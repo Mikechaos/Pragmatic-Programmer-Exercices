@@ -102,48 +102,6 @@
   Returns a collection of rule"
   [rules] (str/split rules #"\s?\|\s?"))
 
-(defn tokenize-rule
-  "Extract all tokens from rule, ignore space and
-  transform each '<term>' into :<term> (str to keyword)"
-  [rule]
-  (let [tokenized-rule (map
-    #(if (re-find term-re %) (keyword %) %)
-    (filter
-      #(not (re-find #"\s+" %))
-      (re-seq token-re rule)))] (prn-debug [tokenized-rule (count tokenized-rule)])
-  tokenized-rule))
-
-
-(defn is-single-token?
-  "Verify if the current token is a combination of many definition or a simple rule
-  If it's a list with only one element, it is also extracted"
-  [token] (or (keyword? token) (are-terminal-rules token) (empty? (rest token))))
-
-(defn has-only-single-tokens?
-  "When we have only single tokens, we can simplify our groupings.
-  The groupings are critical when we apply the cartesian product while compiling the rules
-  We look if we find only keywords (terms) and terminal rules (terminated expr)
-  Returns false if it finds a list of tokens for example"
-  [rules] (every? is-single-token? rules))
-
-(defn remove-unecessary-groupings
-  "When a rule is a single token, we omit the surrounding grouping
-  (:<token>) => :<token>"
-  [tokens] (if (= 1 (count tokens)) (first tokens) tokens))
-
-(defn tokenize-rules
-  "Splits the rules, iterates over each to tokenize it, gather meta-data
-  and format the tokenized rule with proper groupings.
-  \"<digit> | <letter> | + | *\" =>
-  {:tokens ((:<digit>) (:<letter>) (\"+\") (\"*\")), :count 4} with meta {:single-tokens? true}"
-  [rules] (prn-debug rules)
-  (let [
-    split (split-rules rules)
-    cnt (count split)
-    tokens (map tokenize-rule split)
-    single-tokens? (has-only-single-tokens? tokens)
-    final-tokens (remove-unecessary-groupings tokens)] (prn-debug ["tokens" tokens "single-tokens" single-tokens? "final-tokens" final-tokens])
-    (with-meta {:tokens final-tokens :count cnt} {:single-tokens? single-tokens?} )))
 
 
 
@@ -186,57 +144,96 @@
       (flatten (compile-rule terminal-rule))
       (flatten (map apply-appropriate-compilation terminal-rule)))))
 
+(defn tokenize-rule
+  "Extract all tokens from rule, ignore space and
+  transform each '<term>' into :<term> (str to keyword)"
+  [rule]
+  (let [tokenized-rule (map
+    #(if (re-find term-re %) (keyword %) %)
+    (filter
+      #(not (re-find #"\s+" %))
+      (re-seq token-re rule)))] (prn-debug [tokenized-rule (count tokenized-rule)])
+  tokenized-rule))
+
+
+(defn is-single-token?
+  "Verify if the current token is a combination of many definition or a simple rule
+  If it's a list with only one element, it is also extracted"
+  [token] (or (keyword? token) (are-terminal-rules token) (empty? (rest token))))
+
+(defn has-only-single-tokens?
+  "When we have only single tokens, we can simplify our groupings.
+  The groupings are critical when we apply the cartesian product while compiling the rules
+  We look if we find only keywords (terms) and terminal rules (terminated expr)
+  Returns false if it finds a list of tokens for example"
+  [rules] (every? is-single-token? rules))
+
+(defn remove-unecessary-groupings
+  "When a rule is a single token, we omit the surrounding grouping
+  (:<token>) => :<token>"
+  [tokens] (if (= 1 (count tokens)) (first tokens) tokens))
+
+(defn tokenize-rules
+  "Splits the rules, iterates over each to tokenize it, gather meta-data
+  and format the tokenized rule with proper groupings.
+  \"<digit> | <letter> | + | *\" =>
+  {:tokens ((:<digit>) (:<letter>) (\"+\") (\"*\")), :cnt 4} with meta {:single-tokens? true}"
+  [rules] (prn-debug rules)
+  (let [
+    split (split-rules rules)
+    cnt (count split)
+    tokens (map tokenize-rule split)
+    single-tokens? (has-only-single-tokens? tokens)
+    final-tokens (remove-unecessary-groupings tokens)] (prn-debug ["tokens" tokens "single-tokens" single-tokens? "final-tokens" final-tokens])
+    (with-meta {:tokens final-tokens :cnt cnt} {:single-tokens? single-tokens?} )))
+
 
 (defn tokenize-grammar-alt [grammar]
+  "Take a grammar and outputs a map {:<term> {:rules [x y z] :meta-data}}
+  The meta-data need to be refactored. It keeps track of a few flag on the given rules"
   (let [
     lookup-list (map
       (fn [[_ term rules]] (let [
         rule-obj       (tokenize-rules rules)
-        rule-coll      (:tokens rule-obj)
-        cnt            (:count rule-obj)
-        terminal-rule  (are-terminal-rules rule-coll)
-        flatten-rule   (if (:single-tokens (meta rule-coll)) (flatten rule-coll) rule-coll)
-        final-rule     (if terminal-rule (flatten (compile-rule3 flatten-rule cnt)) flatten-rule)] (prn-debug "rule-coll") (prn-debug rule-coll) (prn-debug "terminal-rule") (prn-debug terminal-rule) (prn-debug "final-rule") (prn-debug final-rule)
-        (list (keyword term) {:rules final-rule :terminality terminal-rule :compiled terminal-rule :count cnt })))
-      (match-program parser-rule grammar))] ;(prn-debug lookup-list)
+        rule-expr      (:tokens rule-obj)
+        cnt            (:cnt rule-obj)
+        meta-obj       (meta rule-obj)
+        terminal-rule  (are-terminal-rules rule-expr)
+        ; flatten-rule   (if (:single-tokens meta-obj) rule-expr rule-expr)
+        final-rule     (if terminal-rule (compile-rule-expr rule-expr cnt) rule-expr)] (prn-dbg [rule-expr meta-obj terminal-rule final-rule])
+        (list (keyword term) (with-meta {:rules final-rule :terminality terminal-rule :compiled terminal-rule :cnt cnt} meta-obj))))
+      (match-program parser-rule grammar))] (prn lookup-list)
     (zipmap (map first lookup-list) (map second lookup-list))))
 
 (def lookup (tokenize-grammar-alt simple-grammar))
-(def terminality (check-rule-terminality simple-tokens))
 
 (defn find-next-expand [grammar] (first (filter (fn [x] (not (get-in grammar [x :terminality]))) (keys grammar))))
-; (defn expand-term [grammar next-expand] (vec (flatten (map #(:rules (% grammar)) (:rules (next-expand grammar))))))
+
 (defn expand-term [grammar next-expand] (prn-debug (next-expand grammar))
   (let [
     term (next-expand grammar)
     rules (:rules term)
-    cnt (:count term)
-    side-effect (prn-debug str "SIDE EFFECT" rules)
-    side-effect-3 (prn-debug str "SIDE EFFECT3" cnt)
-    expanded-terms (map
-      (defn real-expand-term [rule] (prn-debug "rule") (prn-debug rule)
+    cnt (:cnt term)]
+    (map
+      (defn real-expand-term [rule] (prn-dbg [rule])
         (if (keyword? rule)
           (:rules (rule grammar))
           (if (are-terminal-rules [rule]) rule
             (map #(real-expand-term %) rule))))
-          ; (prn-debug rule))))
-    rules)
-    side-effet-2 (prn-debug (flatten [expanded-terms]))
-    is-flat? (empty? (filter #(and (not (keyword? %)) (not (are-terminal-rules [%]))) rules))] (prn-debug "is-flat") (prn-debug rules) (prn-debug is-flat?) (prn-debug is-flat?)
-    (if (and is-flat? (not (= 1 cnt))) (flatten [expanded-terms]) expanded-terms)))
+      rules)))
 
-(defn replace-term [grammar expanded-term next-expand]
-  (reduce-kv
+(defn replace-term [grammar expanded-term next-expand] 
+  (reduce-kv 
     (fn [m k v]
       (let [
         compiled? (:compiled v)
         terminal? (are-terminal-rules expanded-term)
         needCompile? (and (not compiled?) terminal?)
-        cnt (:count v)
-        final-term (if needCompile? (compile-rule3 expanded-term cnt) expanded-term)
+        cnt (:cnt v)
+        final-term (if needCompile? (compile-rule-expr expanded-term cnt) expanded-term)
         compiled (or compiled? needCompile?)
         fv (if (= k next-expand)
-          {:rules final-term :terminality terminal? :compiled compiled :count cnt }
+          {:rules final-term :terminality terminal? :compiled compiled :cnt cnt }
           v)] ; (prn-debug compiled)
         (assoc m k fv)))
     {} grammar))
